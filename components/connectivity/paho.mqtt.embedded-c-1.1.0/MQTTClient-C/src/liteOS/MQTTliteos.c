@@ -39,9 +39,21 @@
 #include "mbedtls/platform.h"
 #include "dtls_interface.h"
 
+#if defined(WITH_LINUX)
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/time.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <netdb.h>
+#include <errno.h>
+#elif defined(WITH_LWIP)
 #include "lwip/sockets.h"
 #include "lwip/netdb.h"
 #include "lwip/errno.h"
+#endif
 
 #include "MQTTliteos.h"
 
@@ -616,20 +628,12 @@ int NetworkConnect(Network* n, char* addr, int port)
 
 static void los_mqtt_disconnect(void* ctx)
 {
-    int fd;
-
     if(NULL == ctx)
     {
         ATINY_LOG(LOG_FATAL, "invalid params.\n");
         return;
     }
-    fd = ((mqtt_context_t *)ctx)->fd;
-    if(fd > 0)
-    {
-        close(fd);
-        ((mqtt_context_t *)ctx)->fd = -1;
-    }
-    atiny_free(ctx);
+    atiny_net_close(ctx);
 
     return;
 }

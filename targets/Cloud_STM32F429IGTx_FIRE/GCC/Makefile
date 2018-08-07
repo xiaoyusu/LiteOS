@@ -24,7 +24,7 @@ OPT = -Og
 USE_AT_FRAMEWORK := yes
 ifeq ($(USE_AT_FRAMEWORK), yes)
 #ESP8266   # SIM900A  # NB_NEUL95
-	NETWORK_TYPE := SIM900A
+	NETWORK_TYPE := NB_NEUL95
 endif
 
 #######################################
@@ -36,6 +36,11 @@ USE_BOOTLOADER := no
 # fota
 #######################################
 USE_FOTA := yes
+
+#######################################
+# sota
+#######################################
+USE_SOTA := no
 
 #######################################
 # binaries
@@ -140,7 +145,8 @@ ER_COAP_SRC = \
         C_SOURCES += $(ER_COAP_SRC)
 
 LWM2M_SRC = \
-        ${wildcard $(TOP_DIR)/components/connectivity/lwm2m/core/*.c}
+        ${wildcard $(TOP_DIR)/components/connectivity/lwm2m/core/*.c} \
+		${wildcard $(TOP_DIR)/components/connectivity/lwm2m/examples/shared/*.c}
         C_SOURCES += $(LWM2M_SRC)
 
 OS_ADAPTER_SRC = \
@@ -165,6 +171,12 @@ USER_SRC =  \
         $(TOP_DIR)/targets/Cloud_STM32F429IGTx_FIRE/Src/sys_init.c
         C_SOURCES += $(USER_SRC)
 
+ifeq ($(USE_SOTA), yes)
+SOTA_SRC = \
+        ${wildcard $(TOP_DIR)/components/connectivity/at_fota/*.c}
+        C_SOURCES += $(SOTA_SRC)
+endif
+
 ifeq ($(USE_AT_FRAMEWORK), yes)
 ATADAPTOR_SRC = \
     ${wildcard $(TOP_DIR)/components/connectivity/at_frame/*.c} \
@@ -172,7 +184,7 @@ ATADAPTOR_SRC = \
     C_SOURCES += $(ATADAPTOR_SRC)
 
 ifeq ($(NETWORK_TYPE), ESP8266)
-    USER_DRIVERS_SRC = ${wildcard $(TOP_DIR)/drivers/devices/wifi/*.c}
+    USER_DRIVERS_SRC = ${wildcard $(TOP_DIR)/drivers/devices/wifi/esp8266/*.c}
 else ifeq ($(NETWORK_TYPE), SIM900A)
     USER_DRIVERS_SRC = ${wildcard $(TOP_DIR)/drivers/devices/gprs/*.c}
 else ifeq ($(NETWORK_TYPE), NB_NEUL95)
@@ -253,6 +265,10 @@ else
         C_DEFS += -D WITH_LWIP
 endif
 
+ifeq ($(USE_SOTA), yes)
+		C_DEFS += -DWITH_SOTA
+endif
+
 ifeq ($(USE_FOTA), yes)
 		C_DEFS += -DCONFIG_FEATURE_FOTA
 endif
@@ -310,7 +326,8 @@ ER_COAP_INC = \
         C_INCLUDES += $(ER_COAP_INC)
 
 LWM2M_INC = \
-        -I $(TOP_DIR)/components/connectivity/lwm2m/core
+        -I $(TOP_DIR)/components/connectivity/lwm2m/core \
+		-I $(TOP_DIR)/components/connectivity/lwm2m//examples/shared
         C_INCLUDES += $(LWM2M_INC)
 
 OS_ADAPTER_INC = \
@@ -347,11 +364,17 @@ FIRMWARE_UPDATE_INC = \
 C_INCLUDES += -I $(TOP_DIR)/components/fota/fota_package_storage_device
 endif
 
-ATADAPTOR_INC = \
-        -I $(TOP_DIR)/components/connectivity/at_frame
-        C_INCLUDES += $(ATADAPTOR_INC)
+ifeq ($(USE_SOTA), yes)
+SOTA_INC = \
+        -I $(TOP_DIR)/components/connectivity/at_fota
+        C_INCLUDES += $(SOTA_INC)
+endif
 
 ifeq ($(USE_AT_FRAMEWORK), yes)
+ATADAPTOR_INC = \
+        -I $(TOP_DIR)/components/connectivity/at_frame \
+        -I $(TOP_DIR)/targets/Cloud_STM32F429IGTx_FIRE/Src
+        C_INCLUDES += $(ATADAPTOR_INC)
 ifeq ($(NETWORK_TYPE), ESP8266)
     USER_DRIVERS_INC = -I $(TOP_DIR)/drivers/devices/wifi
 else ifeq ($(NETWORK_TYPE), SIM900A)
