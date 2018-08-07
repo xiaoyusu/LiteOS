@@ -743,15 +743,7 @@ of the large pool of continuous memory whenever a user needs it, and reclaiming
 the memory block when the user no longer needs it.
 
 Comparing with static memory, the advantage is to allocate a memory block of the
-required size, and the disadvantage is that memory pool prone to fragmentation.
-
-If a user's request for memory is fulfilled, the user will be allocated a memory
-block of the requested size. The control header indicates the start address of
-the allocated memory block.
-
-All control headers are recorded in a linked list and categorized by memory
-size. From the linked list, the operating system can quickly find which memory
-block has the required size.
+required size, and the disadvantage is that memory pool prone to fragmentation.  
 
 The LiteOS dynamic memory supports two standard algorithms: DLINK and BEST
 LITTLE.
